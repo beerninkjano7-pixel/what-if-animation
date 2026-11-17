@@ -4,7 +4,7 @@ loudnorm, video copied untouched), measures the result and writes the report.
 python <skill>/scripts/master.py <slug> [--skip-render] [--concurrency 6]
 Writes out/<slug>/<slug>-raw.mp4, out/<slug>/<slug>-final.mp4 and out/<slug>/report.json
 """
-import json, re, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 
 from wi import STUDIO, ep_dir, load_episode, load_json, loudness, out_dir, save_json
 
@@ -20,6 +20,8 @@ npx = 'npx.cmd' if sys.platform == 'win32' else 'npx'
 if '--skip-render' not in args:
     t0 = time.time()
     cmd = [npx, 'remotion', 'render', 'src/index.ts', ep['id'], str(raw), '--log', 'error']
+    if os.environ.get('REMOTION_BROWSER_EXECUTABLE'):  # a Chrome already on the machine, for offline renders
+        cmd += ['--browser-executable', os.environ['REMOTION_BROWSER_EXECUTABLE']]
     if conc:
         cmd += ['--concurrency', conc]
     print(' '.join(cmd))
