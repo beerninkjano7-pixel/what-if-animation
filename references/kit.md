@@ -44,7 +44,7 @@ export const S4: React.FC<ShotProps> = ({ t, len }) => {
 One rig, a costume per character (`LOOKS`): `pip` (A, mustard jacket), `pipHood` (B, the hero: dark hoodie, mustard
 drawstrings), `pipInk` (C, dark head), `mo` (the friend: curls, olive jacket, headphones), `sis` (the little sister:
 bunches with coral bands, teal; draw her at about 0.7 of Pip's scale), `mom` (a bob, a rose cardigan), `suit` (the
-man in a suit: combed hair, charcoal suit, red tie). Render the cast sheet with
+man in a suit: combed hair, charcoal suit, red tie), `teacher` (a grey bob, a teal cardigan). Render the cast sheet with
 `npx remotion still src/index.ts Cast out/cast.png`.
 
 `<Hero look pose rimId shadow />` (alias `Actor`). The **pose**:
@@ -85,6 +85,14 @@ For inserts, `Tabletop` (`furnish.tsx`) fills the frame with a surface seen from
 front edge at `edge` and the floor blurred below; push `edge` past 1080 for a straight top-down shot. Put props on it
 in screen coordinates and bring a character's arm in from the side of frame where they are in the neighbouring shots
 (the dark sleeve and the mitten, scaled up: see `S2` and `S4` in `episodes/copy-paste/shots.tsx`).
+
+## Mind powers (`thoughts.tsx`)
+
+From the hear-thoughts run: `ThoughtBubble x y from t r dark` (trail dots pop up from `from`, the top of a head, then
+the cloud pops on at t = 5 and bobs; children draw centred on x, y; `dark` for a secret, with a red glow),
+`ListenWaves x y t r0` (arcs pulsing out both sides of a listener's head), `Doodle kind` (heart, note, ball, star,
+burger, zzz, cat, game: a crowd's thoughts), `Cactus` (potted, `bow`), `Padlock` (`shut` 0..1), `HeadIcon` (a
+schematic person, `on`, `bubble`). A thought is a picture in the bubble, never a sentence.
 
 ## Sets
 
