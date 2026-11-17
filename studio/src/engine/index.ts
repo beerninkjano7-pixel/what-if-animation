@@ -17,3 +17,5 @@ export * from './sets/kitchen';
 export * from './sets/schematic';
 export * from './sets/bedroom';
 export * from './thoughts';
+export * from './wake';
+export * from './sets/street';

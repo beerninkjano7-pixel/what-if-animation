@@ -13,7 +13,8 @@ Writes public/<slug>/sfx.wav and music.wav, sets their volumes in timeline.json,
                                                         where the clip is cut with a short fade
   "repeats": [{"at": cue, "clip": name, "n": 15, "every": 2, "gain": [lo, hi], "pitch": [lo, hi]}]
                                                         one clip many times, each pitched a little differently
-  "music":   {"clip": name, "until": cue, "reverse_looks": ["rewind"], "from": cue}
+  "beds":    [{"clip": name, "from": cue, "until": cue, "gain": 0.12}]   a clip looped between two cues (room tone)
+  "music":   {"clip": name, "until": cue, "reverse_looks": ["rewind"], "from": cue, "loop": true}
                                                         the bed starts at "from" (default 0), cut at "until"; during a look
                                                         listed in reverse_looks it plays what just played, backwards
   "levels":  {"sfx_lu": 1.5, "music_lu": -9.5}         integrated loudness of each stem against the voice's
@@ -109,14 +110,47 @@ for r in S.get('repeats', []):
         shifted = np.interp(np.arange(0, len(base), k), np.arange(len(base)), base)
         put(sfx, start + r.get('every', 2) * i, shifted, g0 + (g1 - g0) * ((i * 53) % 7) / 6)
 
+def loop_into(buf, a, b, x, gain):
+    """Fill buf[a:b] with x looped, each pass crossfaded into the next (0.5 s), faded in and out at the ends."""
+    xf = int(0.5 * SR)
+    pos, n = a, b - a
+    if n <= 0:
+        return
+    seg = np.zeros(n)
+    k = 0
+    while k < n:
+        piece = x[: min(len(x), n - k)].copy()
+        if k > 0 and len(piece) > xf:
+            piece[:xf] *= np.linspace(0, 1, xf)
+            seg[k - xf:k] *= 1  # the previous pass already fades out below
+        if len(piece) > xf and k + len(piece) < n:
+            piece[-xf:] *= np.linspace(1, 0, xf)
+        seg[k:k + len(piece)] += piece
+        k += max(1, len(piece) - xf)
+    f = min(n // 2, int(0.6 * SR))
+    if f:
+        seg[:f] *= np.linspace(0, 1, f)
+        seg[-f:] *= np.linspace(1, 0, f)
+    buf[pos:pos + n] += seg * gain
+
+
+# beds: a clip looped from one cue to another (room tone for a whole scene)
+for bd in S.get('beds', []):
+    a = int(cue(bd['from']) / FPS * SR)
+    b = int(cue(bd['until']) / FPS * SR) if bd.get('until') else len(sfx)
+    loop_into(sfx, a, min(b, len(sfx)), clips[bd['clip']], bd.get('gain', 0.12))
+
 # ---------------------------------------------------------------- music
 music = np.zeros(int(DUR * SR))
 M = S.get('music')
 if M:
     m = clips[M['clip']]
     m0 = int(cue(M['from']) / FPS * SR) if M.get('from') else 0
-    n = min(len(music) - m0, len(m))
-    music[m0:m0 + n] = m[:n]
+    if M.get('loop'):
+        loop_into(music, m0, len(music), m, 1.0)
+    else:
+        n = min(len(music) - m0, len(m))
+        music[m0:m0 + n] = m[:n]
     for seg_look in M.get('reverse_looks', []):
         runs = []
         for s in tl['segments']:

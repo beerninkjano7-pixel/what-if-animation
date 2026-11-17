@@ -94,7 +94,13 @@ the cloud pops on at t = 5 and bobs; children draw centred on x, y; `dark` for a
 burger, zzz, cat, game: a crowd's thoughts), `Cactus` (potted, `bow`), `Padlock` (`shut` 0..1), `HeadIcon` (a
 schematic person, `on`, `bubble`). A thought is a picture in the bubble, never a sentence.
 
-## Sets
+## Sleepless props (`wake.tsx`)
+
+From the never-tired run: `Guitar` (`strum`), `Fox` (trots on `phase`), `TrafficLight` (`state` 0 red, 1 amber,
+2 green), `CerealBowl` (`milk` past 1 spills), `MilkCarton` (`pour`), `Toaster` (`pop`), `CardboardRocket`, `PodMic`
+(`live`), `HungCoat` (`person` turns its outline into a figure), `WordCard` (one word, `flip`), `JuggleBalls`,
+`Motes`, and `SchIcon` line icons for the schematic (brain, rat, eye, yawn, lids, zzz, clock, car, cup, trophy, book).
+
 
 Each set is a component taking the shot clock `t` (for dust, sways, flicker) and an `id`. Offset `t` per shot so
 idle motion carries across cuts.
@@ -107,6 +113,7 @@ idle motion carries across cuts.
 | `Rooftop` (`sets/rooftop.tsx`) | Parapet at y 790, deck below (feet at about y 820). The sun at (`sunX`, `sunY`), r 170, optionally a clock (`clock`, `spin`, `crack`). City in three depths, string lights between poles at x 140 and 1780. | `red` (the turn's red sky), `lightsOut`, `blackout` (city windows go dark in a sweep from the left), `cityLit` (more lit windows: about 2.5 for a blackout), `low` (camera lower: the city and roof drop by `low`, so feet go lower too) |
 | `Kitchen` (`sets/kitchen.tsx`) | Built with the room kit: `KITCHEN = makeRoom({960,500}, back 500-1420 x 330-745, 3.4)`. Counter run along the back wall with a sink under the window (sun at 860, 530), hob and kettle, splashback, open shelves with jars, fridge on the right, wall cabinets and a wall light on the left, two pendants. Characters stand behind the island at w 0.4 (`stand(KITCHEN, u, 0.4)`), then draw `KitchenIsland` (with two bar stools) so it hides their legs; `islandTop(u, d)` is a point on its top. | `veil`, `red` |
 | `Bedroom` (`sets/bedroom.tsx`) | At night, built with the room kit: `BEDROOM = makeRoom({940,500}, back 480-1440 x 320-742, 3.4)`. Bed in the back left corner (headboard on the back wall, u 0.03-0.4, foot at w 0.47), nightstand with the lamp (`LAMP`) and the clock, `WINDOW` 1070-1330 x 374-600 onto the moon and the lit city, fairy lights and posters over the bed, `CAL` (the wall calendar), a dresser under the window, wardrobe on the right wall, door ajar on the left with the hall light, rug, beanbag, trainers. In bed: draw it with `duvet={false}`, then the character at `bedSit(u)`, then `BedDuvet` (with `knees`) over their legs. `bedTop(u, w)` is a point on the mattress. | `clock`, `lamp` (0..1: flicker it, kill it), `crossed` (the calendar), `veil` |
+| `NightStreet` (`sets/street.tsx`) | A street at 3 a.m. down its length: road to a vanishing point at (960, 560), houses either side with a few lit windows, street lamps in pools of light, the moon. `roadP(across, d)` is a point on the road (across -1..1 kerb to kerb, d 0 far..1 near) with its scale `k`. | `cars` (headlights streaming), `red` |
 | `Schematic` (`sets/schematic.tsx`) | The science beat's ground: a dark blueprint grid with registration marks. On it: `DrawOn` (a path drawing on), `Arrow`, `SchLabel` (mono, pops on), `CountUp` (a number counting, with commas), `PlantIcon` (tower, wind, solar, dam, factory; lit orange when `on`). `SCH` holds its colours. | |
 
 ## The room kit (`room.tsx`, `furnish.tsx`)
