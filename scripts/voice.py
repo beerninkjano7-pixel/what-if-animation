@@ -9,6 +9,7 @@ gaps is free.
 
 episode.json "voice" (all optional): {"id": "TX3LPaxmHKxFdv7VOQHJ", "model": "eleven_multilingual_v2",
   "settings": {"stability": 0.4, "similarity_boost": 0.8, "style": 0.35, "use_speaker_boost": true}}
+episode.json "holds": silence added before chosen words (chapter cards in a long episode), see below.
 episode.json "gaps" (seconds, all optional): {"word": 0.12, "comma": 0.2, "sentence": 0.3, "question": 0.45,
   "pairs": {"anything|One": 0.6}}  -> every pause longer than its limit is cut to the limit, from its middle.
 """
@@ -102,7 +103,6 @@ for i, part in enumerate(parts):
         part[-fade:] *= np.linspace(1, 0, fade)
     parts[i] = part
 y = np.concatenate(parts)
-write_wav(pub_dir(slug) / 'voice.wav', y)
 
 
 def shift(t):
@@ -110,6 +110,35 @@ def shift(t):
 
 
 out = [{'w': w['w'], 's': round(shift(w['s']), 3), 'e': round(shift(w['e']), 3), 'p': w.get('p', '')} for w in words]
+
+# holds: silence added before chosen words, for a long episode's chapter cards ("Day four") or a title.
+# episode.json "holds": [{"before": "Day", "s": 1.6}] before every "Day" (case-sensitive, after a sentence end),
+# or {"before": "What", "nth": 3, "s": 2.0} before its 3rd occurrence only.
+adds = []
+for h in ep.get('holds', []):
+    seen = 0
+    for i, w in enumerate(out):
+        if re.sub(r'[^\w]', '', w['w']) != h['before'] or (i and not re.search(r'[.?!:]', out[i - 1]['p'])):
+            continue
+        seen += 1
+        if 'nth' in h and seen != h['nth']:
+            continue
+        adds.append((i, h['s']))
+if adds:
+    pad = 0.0
+    pieces, last = [], 0
+    for i, sec in sorted(adds):
+        cut = int((out[i - 1]['e'] + 0.6 * (out[i]['s'] - out[i - 1]['e'])) * SR) if i else 0
+        pieces += [y[last:cut], np.zeros(int(sec * SR))]
+        last = cut
+    pieces.append(y[last:])
+    shifts = sorted(adds)
+    for k, w in enumerate(out):
+        d = sum(sec for i, sec in shifts if i <= k)
+        w['s'], w['e'] = round(w['s'] + d, 3), round(w['e'] + d, 3)
+    y = np.concatenate(pieces)
+    print(f'Added {len(adds)} holds, {sum(s for _, s in adds):.1f} s')
+write_wav(pub_dir(slug) / 'voice.wav', y)
 save_json(ep_dir(slug) / 'words.json', out)
 print(f'Tightened {len(cuts)} pauses, removed {sum(e - s for s, e in cuts):.2f} s: {len(x) / SR:.2f} s -> {len(y) / SR:.2f} s')
 print(' '.join(f"{w['w']}@{w['s']}" for w in out))

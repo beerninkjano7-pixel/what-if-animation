@@ -48,6 +48,27 @@ spoken, method = None, ''
 try:
     from pocketsphinx import Decoder
     dec = Decoder(samprate=16000, bestpath=False, loglevel='FATAL')
+    # words the dictionary lacks get a pronunciation built from known parts: creak + s, micro + sleep
+    import pocketsphinx
+    cmu = {}
+    for line in open(os.path.join(os.path.dirname(pocketsphinx.__file__), 'model', 'en-us', 'cmudict-en-us.dict')):
+        k, _, ph = line.strip().partition(' ')
+        cmu.setdefault(k, ph)
+    def guess(w):
+        if w in cmu:
+            return cmu[w]
+        if w.endswith('s') and w[:-1] in cmu:
+            return cmu[w[:-1]] + (' Z' if cmu[w[:-1]].split()[-1] not in ('P', 'T', 'K', 'F', 'TH') else ' S')
+        for i in range(2, len(w) - 1):
+            a, b = guess(w[:i]), guess(w[i:])
+            if a and b:
+                return a + ' ' + b
+        return None
+    for w in set(norm(t['w']) for t in tokens):
+        if w not in cmu:
+            ph = guess(w)
+            if ph:
+                dec.add_word(w, ph, False)
     dec.set_align_text(' '.join(norm(t['w']) for t in tokens))
     dec.start_utt()
     dec.process_raw(pcm, full_utt=True)
